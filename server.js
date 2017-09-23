@@ -4,14 +4,14 @@ const Router = require("koa-router");
 const router = new Router();
 const api = require("./api/api");
 
-router.get("/search_block", (ctx) => {
+router.get("/block_search", async (ctx) => {
     let param = ctx.request.url.split("?")[1];
     ctx.status = 200;
     ctx.body = api.search(param);
 });
 
 /*app.use(async(ctx, next) => {
- try {
+s try {
  await next();
  } catch (e) {
  ctx.body = JSON.stringify({message: e.message});

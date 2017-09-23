@@ -1,5 +1,7 @@
 "use strict";
 
+const {get_param,req_to_db} = require("../functions/func");
+
 module.exports ={
     search : (search_req) => {
         /*
@@ -40,60 +42,65 @@ module.exports ={
         *   }
         * */
 
-        console.log("params -> "+search_req);
-        return {
-            "params": search_req,
-            "count" : 2,
-            "search_rez" : [
-                {
-                    "name": "Булочка з маком",
-                    "id": 2233,
-                    "time": {
-                        "min" : 20,
-                        "max" : 40,
-                        "time_stamp": 2
-                    },
-                    "ingredients": [
-                        {
-                            "id": 1,
-                            "name":"мука"
-                        },
-                        {
-                            "id":2,
-                            "name":"мак"
-                        },
-                        {
-                            "id":3,
-                            "name":"яйце"
-                        }
-                    ],
-                    "photo":"/img/erhy65mb.jpg"
-                },
-                {
-                    "name": "Булочка з медом",
-                    "id": 2234,
-                    "time": {
-                        "min" : 20,
-                        "max" : 40,
-                        "time_stamp": 2
-                    },
-                    "ingredients": [
-                        {
-                            "id": 1,
-                            "name":"мука"
-                        },
-                        {
-                            "id":5,
-                            "name":"мед"
-                        },
-                        {
-                            "id":3,
-                            "name":"яйце"
-                        }
-                    ],
-                    "photo":"/img/erhy66mb.jpg"
-                }
-            ]
-        }
+        let search_param = get_param(search_req);
+
+        return req_to_db(Number(search_param["type"]), Number(search_param["size"]), Number(search_param["page"]), search_param["param"])
     }
 };
+
+
+/*
+{
+    "params": search_req,
+    "count" : 2,
+    "search_rez" : [
+    {
+        "name": "Булочка з маком",
+        "id": 2233,
+        "time": {
+            "min" : 20,
+            "max" : 40,
+            "time_stamp": 2
+        },
+        "ingredients": [
+            {
+                "id": 1,
+                "name":"мука"
+            },
+            {
+                "id":2,
+                "name":"мак"
+            },
+            {
+                "id":3,
+                "name":"яйце"
+            }
+        ],
+        "photo":"/img/erhy65mb.jpg"
+    },
+    {
+        "name": "Булочка з медом",
+        "id": 2234,
+        "time": {
+            "min" : 20,
+            "max" : 40,
+            "time_stamp": 2
+        },
+        "ingredients": [
+            {
+                "id": 1,
+                "name":"мука"
+            },
+            {
+                "id":5,
+                "name":"мед"
+            },
+            {
+                "id":3,
+                "name":"яйце"
+            }
+        ],
+        "photo":"/img/erhy66mb.jpg"
+    }
+]
+}*/
