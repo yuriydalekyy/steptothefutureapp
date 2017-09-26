@@ -1,11 +1,7 @@
 "use strict";
 
 let elasticsearch = require('elasticsearch');
-let client = new elasticsearch.Client({
-    host: 'https://brkq6d2mdf:lkpd33eabr@first-cluster-3390890112.eu-central-1.bonsaisearch.net',
-    log: 'trace'
-});
-let name = "Капустний пиріг";
+let name = "bla papa";
 let time = "40-60-hv";
 let ing = [
     {
@@ -63,85 +59,12 @@ let steps = [
     {"text": "Поставити форму в розігріту до 180 ° С духовку, випікати 30 хвилин до утворення золотистої скоринки."}
 ];
 let photo = "http://www.povarenok.ru/data/cache/2013may/09/34/153456_37464-300x0.jpg";
-/*client.create({
-    index: 'api',
-    type: 'rec',
-    id: 1,
-    body: {
-        "name": "Капустний пиріг",
-        "time": {
-            "min": 40,
-            "max": 60,
-            "time_stamp_id": 2,
-            "time_stamp": "hv"
-        },
-        "ingredients": [
-            {
-                "id": 1,
-                "name": "Капуста білокачанна",
-                "weight": 500
-            },
-            {
-                "id": 2,
-                "name": "Куряче яйце",
-                "count": 3
-            },
-            {
-                "id": 3,
-                "name": "Сметана",
-                "count_sl": 5
-            },
-            {
-                "id": 4,
-                "name": "Майонез",
-                "count_sl": 3
-            },
-            {
-                "id": 5,
-                "name": "Мука пшенична",
-                "count_sl": 6
-            },
-            {
-                "id": 6,
-                "name": "Сіль",
-                "count_chl": 1
-            },
-            {
-                "id": 7,
-                "name": "Розпушувач тіста",
-                "count_chl": 2
-            },
-            {
-                "id": 8,
-                "name": "Кріп",
-                "count_pch": 0.5
-            },
-            {
-                "id": 9,
-                "name": "Кунжут"
-            }
-        ],
-        "steps": [
-            {"text": "Капусту нашаткувати, посолити і злегка пом'яти."},
-            {"text": "Додати дрібно нарізану зелень."},
-            {"text": "Яйця збити в однорідну масу."},
-            {"text": "Додати інші інгредієнти і замісити тісто."},
-            {"text": "Форму змастити вершковим маслом і викласти в неї капусту."},
-            {"text": "Залити тестом і посипати зверху кунжутом."},
-            {"text": "Поставити форму в розігріту до 180 ° С духовку, випікати 30 хвилин до утворення золотистої скоринки."}
-        ],
-        "photo": "http://www.povarenok.ru/data/cache/2013may/09/34/153456_37464-300x0.jpg"
-    }
+let index = "api";
+let type = "rec";
+let id;
 
-}, function (error, response) {
-    if (error) {
-        console.log("Error --> " + error)
-    } else {
-        console.log("Response --> " + response)
-    }
-});*/
 
-let create_new_data = (name, time, ingredients, steps, photo) => {
+let create_new_data = (index, type, name, time, ingredients, steps, photo) => {
     /**
      * name - string
      * time - string в форматі {мін час}-{макс час]-{одиниця виміру} - "20-40-хв"
@@ -155,19 +78,22 @@ let create_new_data = (name, time, ingredients, steps, photo) => {
      * photo - string
      */
 
-    let flag =false;
-
-    if(typeof name !== "string") {
+    let client = new elasticsearch.Client({
+        host: 'https://brkq6d2mdf:lkpd33eabr@first-cluster-3390890112.eu-central-1.bonsaisearch.net',
+    });
+    let flag = false;
+    if (typeof name !== "string") {
         console.log("Невірний формат назви страви...");
-        flag=1;
-    };
-    if(!(/(-(([A-Za-z]{1,3})|([а-яА-Яіїщ]{1,3})))$/g.test(time))){
-        console.log("Невірний формат часу....");
-        flag=true;
+        flag = 1;
     }
-    if(typeof ingredients !== "object") {
+    ;
+    if (!(/(-(([A-Za-z]{1,3})|([а-яА-Яіїщ]{1,3})))$/g.test(time))) {
+        console.log("Невірний формат часу....");
+        flag = true;
+    }
+    if (!Array.isArray(ingredients)) {
         console.log("Невірний формат інгрідієнтів...");
-        flag=true;
+        flag = true;
     } else {
         ingredients.forEach(function (item, i) {
             if (typeof item.id !== "number") {
@@ -180,34 +106,136 @@ let create_new_data = (name, time, ingredients, steps, photo) => {
             }
         });
     }
+
     if (flag) {
         return false
-    }
-    client.create({
-        index: 'api',
-        type: 'rec',
-        id: 1,
+    };
+/*Знаходим найбільший ід*/
+    client.search({
+        index: index,
+        type: type,
         body: {
-            name,
-            "time": {
-                "min": time.split("-")[0],
-                "max": time.split("-")[1],
-                "time_stamp": time.split("-")[2]
-            },
-            ingredients,
-            steps,
-            photo
+            "sort": [{"created_at": "desc"}]
+        },
+        size: 1
+    }).then(function (resp) {
+        if (resp.hits.hits[0] !== undefined) {
+            id = Number(resp.hits.hits[0]._id) + 1;
+        } else {
+            console.log(2)
+            id = 1;
         }
 
-    }, function (error, response) {
-        if (error) {
-            console.log("Error --> " + error);
-        } else {
-            console.log("Response --> " + response);
-        }
+        client.create({
+            index: index,
+            type: type,
+            id: id,
+            body: {
+                name,
+                "time": {
+                    "min": time.split("-")[0],
+                    "max": time.split("-")[1],
+                    "time_stamp": time.split("-")[2]
+                },
+                ingredients,
+                steps,
+                photo,
+                "created_at": new Date()
+            }
+
+        }, function (error, response) {
+            if (error) {
+                console.log("Error --> " + error);
+            } else {
+                console.log("Response --> " + response);
+            }
+        });
+    }, function (err) {
+        console.trace(err.message);
     });
+
+
 };
 
-create_new_data(name,time,ing,steps,photo);
+let create_new_ingredients = (index, type, name) => {
+    let client = new elasticsearch.Client({
+        host: 'https://brkq6d2mdf:lkpd33eabr@first-cluster-3390890112.eu-central-1.bonsaisearch.net',
+    });
 
-module.exports = {create_new_data};
+    client.search({
+        index: index,
+        type: type,
+        body: {
+            "sort": [{"created_at": "desc"}]
+        },
+        size: 1
+    }).then(function (resp) {
+        if (resp.hits.hits[0] !== undefined) {
+            id = Number(resp.hits.hits[0]._id) + 1;
+        } else {
+            id = 1;
+        }
+        client.create({
+            index: index,
+            type: type,
+            id: id,
+            body: {
+                name,
+                "created_at": new Date()
+            }
+
+        }, function (error, response) {
+            if (error) {
+                console.log("Error --> " + error);
+            } else {
+                console.log("Response --> " + response);
+            }
+        });
+    }, function (err) {
+        console.trace(err.message);
+    });
+
+
+};
+
+let search_data_by_name = async (param, size, page) => {
+    let client = new elasticsearch.Client({
+        host: 'https://brkq6d2mdf:lkpd33eabr@first-cluster-3390890112.eu-central-1.bonsaisearch.net',
+    });
+
+    if (param == undefined) {
+        param = {}
+    } else {
+        param = {
+
+            "match": {
+                "name": param
+            }
+
+        }
+    }
+
+    return await client.search({
+        index: 'api',
+        type: 'rec',
+        body: {
+            "query": param
+            ,
+            "sort": [{"created_at": "desc"}]
+        },
+        size: size
+    }).then(function (resp) {
+        return resp.hits;
+    }, function (err) {
+        console.trace(err.message);
+        return false;
+    });
+
+};
+
+//search_data();
+//create_new_data(index, type, name,time,ing,steps,photo);
+//create_new_ingredients(index, type, name);
+
+
+module.exports = {create_new_data, search_data_by_name, create_new_ingredients};

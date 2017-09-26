@@ -6,20 +6,25 @@ const api = require("./api/api");
 
 router.get("/block_search", async (ctx) => {
     let param = ctx.request.url.split("?")[1];
-    ctx.status = 200;
-    ctx.body = api.search(param);
+    let answer;
+    if (answer = await api.search(param)) {
+        ctx.status = 200;
+        ctx.body = answer;
+    } else {
+        console.log(answer);
+        ctx.status = 500;
+        ctx.body = "We have a problem!!!!";
+    }
+
 });
 
-/*app.use(async(ctx, next) => {
-s try {
- await next();
- } catch (e) {
- ctx.body = JSON.stringify({message: e.message});
- ctx.status = 500;
- }
- });*/
+router.get("/add_new", async (ctx) => {
 
-//app.use(require("koa-convert")(serve('./app/public')));
+    ctx.status = 200;
+    ctx.body = await api.search(param);
+});
+
+
 app.use(async function (ctx, next) {
     console.log("req url : " + ctx.request.url);
     await next();
